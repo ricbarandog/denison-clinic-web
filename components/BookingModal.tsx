@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SERVICES, ICONS } from '../constants';
 import { AppointmentRequest } from '../types';
-import { submitAppointment } from '../lib/supabase';
+import { submitAppointment, getBookedSlotsForDate } from '../lib/supabase';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const TIME_SLOTS = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00'];
 
 const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(1);
@@ -20,8 +22,32 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
   if (!isOpen) return null;
+
+  // Fetch booked slots whenever the date changes
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (formData.date) {
+        setIsLoadingSlots(true);
+        try {
+          const booked = await getBookedSlotsForDate(formData.date);
+          setBookedSlots(booked);
+          // If the currently selected time is now booked, clear it
+          if (formData.time && booked.includes(formData.time)) {
+            setFormData(prev => ({ ...prev, time: '' }));
+          }
+        } catch (err) {
+          console.error("Error checking availability:", err);
+        } finally {
+          setIsLoadingSlots(false);
+        }
+      }
+    };
+    fetchSlots();
+  }, [formData.date]);
 
   const handleNext = () => setStep(s => s + 1);
   const handleBack = () => setStep(s => s - 1);
@@ -37,16 +63,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
       setIsSuccess(true);
     } catch (err: any) {
       console.error("Submission error:", err);
-      
-      if (err.message === "API_NOT_CONFIGURED") {
-        // Fallback for demonstration if keys are missing
-        await new Promise(r => setTimeout(r, 1000));
-        setIsSubmitting(false);
-        setIsSuccess(true);
-      } else {
-        setIsSubmitting(false);
-        setError(err.message || "Unable to save appointment. Please check your connection.");
-      }
+      setIsSubmitting(false);
+      setError(err.message || "Unable to save appointment. Please check your connection.");
     }
   };
 
@@ -92,33 +110,55 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-600 mb-1">Select Date</label>
-                <input 
-                  type="date" 
-                  required
-                  min={new Date().toISOString().split('T')[0]}
-                  value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
-                />
+                <div className="relative">
+                  <input 
+                    type="date" 
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                    value={formData.date}
+                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                  />
+                  {isLoadingSlots && (
+                    <div className="absolute right-3 top-3.5">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
               </div>
+              
               <div className="grid grid-cols-3 gap-2">
-                {['09:00', '10:00', '11:00', '13:00', '14:00', '15:00'].map(t => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setFormData({...formData, time: t})}
-                    className={`p-2 text-sm border rounded-lg transition-colors ${formData.time === t ? 'bg-medical-blue text-white border-medical-blue shadow-sm' : 'bg-white hover:border-blue-400'}`}
-                  >
-                    {t}
-                  </button>
-                ))}
+                {TIME_SLOTS.map(t => {
+                  const isBooked = bookedSlots.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      disabled={isBooked}
+                      onClick={() => setFormData({...formData, time: t})}
+                      className={`p-2 text-sm border rounded-lg transition-all relative ${
+                        formData.time === t 
+                          ? 'bg-medical-blue text-white border-medical-blue shadow-sm' 
+                          : isBooked
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through'
+                          : 'bg-white hover:border-blue-400 text-gray-700'
+                      }`}
+                    >
+                      {t}
+                      {isBooked && <span className="absolute -top-1 -right-1 flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>}
+                    </button>
+                  );
+                })}
               </div>
+              {bookedSlots.length > 0 && (
+                <p className="text-[10px] text-gray-400 italic">* Red indicator denotes slots already taken by other patients.</p>
+              )}
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={handleBack} className="flex-1 border border-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors">Back</button>
               <button 
                 type="button"
-                disabled={!formData.date || !formData.time}
+                disabled={!formData.date || !formData.time || isLoadingSlots}
                 onClick={handleNext} 
                 className="flex-[2] bg-medical-blue text-white py-4 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg active:scale-[0.98]"
               >Patient Details</button>
@@ -130,7 +170,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <h3 className="text-xl font-bold text-gray-800">Patient Information</h3>
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
+              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-3 animate-bounce">
+                <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
                 {error}
               </div>
             )}
@@ -225,7 +266,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
               <button 
                 onClick={() => {
                   onClose();
-                  // Force a custom event so dashboard knows to update if open
                   window.dispatchEvent(new CustomEvent('appointment-added'));
                 }}
                 className="mt-8 bg-medical-blue text-white px-10 py-3 rounded-full font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all hover:scale-105"

@@ -1,9 +1,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@^2.45.0';
 
-/**
- * Helper to retrieve environment variables across different runtimes (Vite, Web, Vercel).
- */
 const getEnv = (name: string): string => {
   const metaEnv = (import.meta as any).env;
   if (metaEnv && metaEnv[name]) return metaEnv[name];
@@ -34,10 +31,47 @@ export const supabase = createClient(
   supabaseAnonKey || 'placeholder-key'
 );
 
+/**
+ * Checks if a specific date and time slot is already occupied.
+ */
+export const checkAvailability = async (date: string, time: string) => {
+  if (!isConfigured) return true; // Default to available for demo if not configured
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('id')
+    .eq('appointment_date', date)
+    .eq('appointment_time', time);
+
+  if (error) throw error;
+  return data.length === 0;
+};
+
+/**
+ * Returns all booked times for a specific date to help the UI disable slots.
+ */
+export const getBookedSlotsForDate = async (date: string) => {
+  if (!isConfigured) return [];
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('appointment_time')
+    .eq('appointment_date', date);
+
+  if (error) throw error;
+  return data.map(row => row.appointment_time);
+};
+
 export const submitAppointment = async (appointmentData: any) => {
   if (!isConfigured) {
     if (isSecretKey) throw new Error("SECURITY_ERROR: Using service_role key in browser is forbidden.");
     throw new Error("API_NOT_CONFIGURED");
+  }
+
+  // Double check availability immediately before inserting to prevent race conditions
+  const isAvailable = await checkAvailability(appointmentData.date, appointmentData.time);
+  if (!isAvailable) {
+    throw new Error("This time slot was just booked by another patient. Please select a different time.");
   }
 
   const { data, error } = await supabase
