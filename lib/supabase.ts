@@ -1,26 +1,48 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@^2.45.0';
 
-const getEnv = (name: string) => {
-  return (
-    (import.meta as any).env?.[name] || 
-    (window as any).process?.env?.[name] || 
-    ''
-  );
+/**
+ * Helper to retrieve environment variables across different runtimes (Vite, Web, Vercel).
+ */
+const getEnv = (name: string): string => {
+  const env = (import.meta as any).env;
+  if (env && env[name]) return env[name];
+  
+  const processEnv = (window as any).process?.env;
+  if (processEnv && processEnv[name]) return processEnv[name];
+
+  // Fallback to checking window for injected globals
+  if ((window as any)[name]) return (window as any)[name];
+  
+  return '';
 };
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://nrhmsrhsnbbamvymjpkp.supabase.co';
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'sb_secret_cfLES1Gvwq35LiHO47XUXA_K8_1bBjI';
+const supabaseUrl = getEnv('VITE_SUPABASE_URL');
+const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
 
-const isConfigured = 
-  supabaseUrl !== 'https://nrhmsrhsnbbamvymjpkp.supabase.co' && 
-  supabaseAnonKey !== 'sb_secret_cfLES1Gvwq35LiHO47XUXA_K8_1bBjI';
+// A configuration is valid only if both keys are present and not the initial placeholders
+const isConfigured = Boolean(
+  supabaseUrl && 
+  supabaseAnonKey && 
+  supabaseUrl.includes('supabase.co') &&
+  supabaseUrl !== 'https://placeholder-project.supabase.co'
+);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Log status for debugging (viewable in browser console)
+if (!isConfigured) {
+  console.warn("Denison Clinic: Supabase is NOT configured. Operating in Demo Mode.");
+} else {
+  console.log("Denison Clinic: Supabase connection initialized.");
+}
+
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder-project.supabase.co', 
+  supabaseAnonKey || 'placeholder-key'
+);
 
 export const submitAppointment = async (appointmentData: any) => {
   if (!isConfigured) {
-    console.warn("Supabase is not configured.");
+    console.warn("Submission blocked: API_NOT_CONFIGURED. Simulating database write...");
     throw new Error("API_NOT_CONFIGURED");
   }
 
@@ -39,20 +61,30 @@ export const submitAppointment = async (appointmentData: any) => {
         insurance_provider: appointmentData.insuranceProvider,
         created_at: new Date().toISOString(),
       },
-    ]);
+    ])
+    .select(); // Ensure we return the data to verify the write
 
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase Insert Error:", error);
+    throw error;
+  }
   return data;
 };
 
 export const fetchAppointments = async () => {
-  if (!isConfigured) return [];
+  if (!isConfigured) {
+    console.warn("Fetch blocked: API_NOT_CONFIGURED.");
+    return [];
+  }
   
   const { data, error } = await supabase
     .from('appointments')
     .select('*')
-    .order('appointment_date', { ascending: true });
+    .order('created_at', { ascending: false }); // Show newest first
 
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase Fetch Error:", error);
+    throw error;
+  }
   return data || [];
 };

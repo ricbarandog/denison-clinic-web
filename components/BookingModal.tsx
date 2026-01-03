@@ -38,15 +38,14 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
     } catch (err: any) {
       console.error("Submission error:", err);
       
-      // Handle the case where the site is in "Demo Mode" (no API keys provided)
       if (err.message === "API_NOT_CONFIGURED") {
-        console.log("Proceeding in Demo Mode (Simulating success)...");
-        await new Promise(r => setTimeout(r, 1500));
+        // Fallback for demonstration if keys are missing
+        await new Promise(r => setTimeout(r, 1000));
         setIsSubmitting(false);
         setIsSuccess(true);
       } else {
         setIsSubmitting(false);
-        setError("Unable to connect to the secure server. Please check your internet connection and try again.");
+        setError(err.message || "Unable to save appointment. Please check your connection.");
       }
     }
   };
@@ -61,6 +60,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
               {SERVICES.map(s => (
                 <button
                   key={s.id}
+                  type="button"
                   onClick={() => setFormData({...formData, serviceId: s.id})}
                   className={`p-4 border rounded-xl text-left transition-all ${formData.serviceId === s.id ? 'border-medical-blue bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-300'}`}
                 >
@@ -82,7 +82,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                 className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase transition-colors ${formData.patientType === 'returning' ? 'bg-medical-blue text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'}`}
               >Returning</button>
             </div>
-            <button onClick={handleNext} className="w-full bg-medical-blue text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98]">Continue to Schedule</button>
+            <button type="button" onClick={handleNext} className="w-full bg-medical-blue text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98]">Continue to Schedule</button>
           </div>
         );
       case 2:
@@ -115,8 +115,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={handleBack} className="flex-1 border border-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors">Back</button>
+              <button type="button" onClick={handleBack} className="flex-1 border border-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors">Back</button>
               <button 
+                type="button"
                 disabled={!formData.date || !formData.time}
                 onClick={handleNext} 
                 className="flex-[2] bg-medical-blue text-white py-4 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg active:scale-[0.98]"
@@ -129,7 +130,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <h3 className="text-xl font-bold text-gray-800">Patient Information</h3>
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium animate-shake">
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
                 {error}
               </div>
             )}
@@ -168,7 +169,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                  className="w-full p-2 border border-blue-200 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
                  onChange={e => setFormData({...formData, insuranceProvider: e.target.value})}
                />
-               <p className="mt-2 text-[10px] text-gray-500 italic">Your data is protected by end-to-end encryption and handled in accordance with HIPAA-compliant principles.</p>
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={handleBack} className="flex-1 border border-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors">Back</button>
@@ -184,7 +184,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                     </svg>
-                    Securely Confirm Appointment
+                    Confirm Appointment
                   </>
                 )}
               </button>
@@ -197,7 +197,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative">
         <div className="bg-medical-blue h-2 w-full"></div>
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
@@ -216,14 +216,18 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {isSuccess ? (
-            <div className="text-center py-12 space-y-4">
-              <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
+            <div className="text-center py-12 space-y-4 animate-in fade-in zoom-in duration-300">
+              <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                 <ICONS.Check />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Booking Confirmed!</h2>
-              <p className="text-gray-600 px-8">Thank you, {formData.firstName}. Your appointment is securely registered. We've sent a confirmation email with details for {formData.date} at {formData.time}.</p>
+              <p className="text-gray-600 px-8">Thank you, {formData.firstName}. Your appointment has been recorded. We will see you on {formData.date} at {formData.time}.</p>
               <button 
-                onClick={onClose}
+                onClick={() => {
+                  onClose();
+                  // Force a custom event so dashboard knows to update if open
+                  window.dispatchEvent(new CustomEvent('appointment-added'));
+                }}
                 className="mt-8 bg-medical-blue text-white px-10 py-3 rounded-full font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all hover:scale-105"
               >
                 Return to Website
