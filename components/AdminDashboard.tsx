@@ -1,26 +1,39 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { fetchAppointments } from '../lib/supabase';
 import { SERVICES } from '../constants';
 
 const AdminDashboard: React.FC = () => {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState('');
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchAppointments();
-        setAppointments(data);
-      } catch (err) {
-        console.error("Failed to load appointments", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
+  const loadData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    else setRefreshing(true);
+    
+    try {
+      const data = await fetchAppointments();
+      setAppointments(data);
+    } catch (err) {
+      console.error("Failed to load appointments", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+    
+    // Auto-refresh every 30 seconds to catch new bookings
+    const interval = setInterval(() => {
+      loadData(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const getServiceName = (id: string) => SERVICES.find(s => s.id === id)?.name || 'Unknown';
 
@@ -50,7 +63,8 @@ const AdminDashboard: React.FC = () => {
           </div>
         </nav>
         <div className="mt-auto pt-6 border-t border-gray-100">
-           <button onClick={() => window.location.reload()} className="text-gray-500 hover:text-red-500 font-medium flex items-center gap-2">
+           <button onClick={() => window.location.reload()} className="text-gray-500 hover:text-red-500 font-medium flex items-center gap-2 transition-colors">
+             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
              Logout
            </button>
         </div>
@@ -59,14 +73,29 @@ const AdminDashboard: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-20 bg-white border-b border-gray-200 px-8 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Appointment Management</h1>
-          <div className="flex gap-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900">Appointment Management</h1>
+            {refreshing && (
+              <span className="flex items-center gap-2 text-xs font-medium text-blue-500 bg-blue-50 px-2 py-1 rounded-full animate-pulse">
+                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                Updating...
+              </span>
+            )}
+          </div>
+          <div className="flex gap-4 items-center">
+             <button 
+               onClick={() => loadData()}
+               className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+               title="Manual Refresh"
+             >
+               <svg className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+             </button>
              <input 
                type="text" 
                placeholder="Search patients..." 
                value={filter}
                onChange={(e) => setFilter(e.target.value)}
-               className="px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 w-64"
+               className="px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 w-64 transition-all"
              />
           </div>
         </header>
@@ -74,15 +103,15 @@ const AdminDashboard: React.FC = () => {
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
               <div className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Bookings</div>
               <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
               <div className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">New Patients</div>
               <div className="text-3xl font-bold text-blue-600">{stats.new}</div>
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
               <div className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Today</div>
               <div className="text-3xl font-bold text-green-600">{stats.today}</div>
             </div>
@@ -103,18 +132,23 @@ const AdminDashboard: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {loading ? (
-                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400">Loading appointments...</td></tr>
+                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span>Syncing database...</span>
+                      </div>
+                    </td></tr>
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400">No appointments found.</td></tr>
+                    <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium">No appointments found matching your search.</td></tr>
                   ) : filtered.map((app) => (
-                    <tr key={app.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={app.id} className="hover:bg-blue-50/30 transition-colors group">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-gray-900">{app.first_name} {app.last_name}</div>
+                        <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{app.first_name} {app.last_name}</div>
                         <div className="text-xs text-gray-500">{app.email}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-700">{getServiceName(app.service_id)}</div>
-                        <div className="text-[10px] text-gray-400">{app.insurance_provider || 'No Insurance Info'}</div>
+                        <div className="text-[10px] text-gray-400">{app.insurance_provider || 'Self-Pay / No Insurance'}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-bold text-gray-900">{app.appointment_date}</div>
@@ -127,8 +161,8 @@ const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                           <span className="text-xs font-medium text-gray-600">Confirmed</span>
+                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                           <span className="text-xs font-medium text-gray-600 tracking-tight">Confirmed</span>
                         </div>
                       </td>
                     </tr>

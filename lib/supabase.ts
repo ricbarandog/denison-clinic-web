@@ -9,12 +9,12 @@ const getEnv = (name: string) => {
   );
 };
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://nrhmsrhsnbbamvymjpkp.supabase.co';
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'sb_secret_cfLES1Gvwq35LiHO47XUXA_K8_1bBjI';
+const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://placeholder-project.supabase.co';
+const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'placeholder-key';
 
 const isConfigured = 
-  supabaseUrl !== 'https://nrhmsrhsnbbamvymjpkp.supabase.co' && 
-  supabaseAnonKey !== 'sb_secret_cfLES1Gvwq35LiHO47XUXA_K8_1bBjI';
+  supabaseUrl !== 'https://placeholder-project.supabase.co' && 
+  supabaseAnonKey !== 'placeholder-key';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
