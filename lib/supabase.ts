@@ -30,8 +30,8 @@ const isConfigured = Boolean(
 );
 
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-project.supabase.co', 
-  supabaseAnonKey || 'placeholder-key'
+  supabaseUrl || 'https://nrhmsrhsnbbamvymjpkp.supabase.co', 
+  supabaseAnonKey || 'sb_publishable_R4AIPXtNXz41P4nDqwKWFw_TRmtO-mM'
 );
 
 export const submitAppointment = async (appointmentData: any) => {
