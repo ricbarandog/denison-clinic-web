@@ -2,10 +2,16 @@
 # Denison Clinic Deployment Guide
 
 ## Vercel Environment Variables
-To connect this site to your Supabase database, add the following Environment Variables in your Vercel Project Settings:
+To connect this site to your Supabase and Twilio accounts, add the following Environment Variables in your Vercel Project Settings:
 
-1. `VITE_SUPABASE_URL`: Your Supabase Project URL (found in Project Settings -> API)
+### Supabase (Required for bookings)
+1. `VITE_SUPABASE_URL`: Your Supabase Project URL
 2. `VITE_SUPABASE_ANON_KEY`: Your Supabase Anon Public Key
+
+### Twilio (Required for SMS reminders)
+1. `VITE_TWILIO_ACCOUNT_SID`: Found in Twilio Console
+2. `VITE_TWILIO_AUTH_TOKEN`: Found in Twilio Console
+3. `VITE_TWILIO_PHONE_NUMBER`: Your Twilio "From" Number
 
 ## Supabase Database Schema
 Run the following SQL in your Supabase SQL Editor to create the required table:
@@ -25,10 +31,8 @@ create table appointments (
   created_at timestamp with time zone default now()
 );
 
--- Enable Row Level Security
 alter table appointments enable row level security;
 
--- Create a policy that allows anyone to insert (for the booking form)
-create policy "Enable insert for all users" on appointments 
-  for insert with check (true);
+create policy "Enable insert for all users" on appointments for insert with check (true);
+create policy "Enable select for all users" on appointments for select using (true);
 ```
