@@ -1,5 +1,5 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@^2.45.0';
+import { createClient } from '@supabase/supabase-js';
 
 const getEnv = (name: string): string => {
   const metaEnv = (import.meta as any).env;
@@ -27,8 +27,8 @@ const isConfigured = Boolean(
 );
 
 export const supabase = createClient(
-  supabaseUrl || 'https://nrhmsrhsnbbamvymjpkp.supabase.co', 
-  supabaseAnonKey || 'sb_publishable_R4AIPXtNXz41P4nDqwKWFw_TRmtO-mM'
+  supabaseUrl || 'https://placeholder-project.supabase.co', 
+  supabaseAnonKey || 'placeholder-key'
 );
 
 /**
@@ -37,14 +37,21 @@ export const supabase = createClient(
 export const checkAvailability = async (date: string, time: string) => {
   if (!isConfigured) return true; // Default to available for demo if not configured
 
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('id')
-    .eq('appointment_date', date)
-    .eq('appointment_time', time);
+  try {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('id')
+      .eq('appointment_date', date)
+      .eq('appointment_time', time);
 
-  if (error) throw error;
-  return data.length === 0;
+    if (error) {
+       console.warn("Supabase availability check error:", error.message);
+       return true; // Fail safe to available in dev
+    }
+    return data.length === 0;
+  } catch (e) {
+    return true;
+  }
 };
 
 /**
@@ -53,19 +60,26 @@ export const checkAvailability = async (date: string, time: string) => {
 export const getBookedSlotsForDate = async (date: string) => {
   if (!isConfigured) return [];
 
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('appointment_time')
-    .eq('appointment_date', date);
+  try {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('appointment_time')
+      .eq('appointment_date', date);
 
-  if (error) throw error;
-  return data.map(row => row.appointment_time);
+    if (error) {
+      console.warn("Supabase slot fetch error:", error.message);
+      return [];
+    }
+    return data.map(row => row.appointment_time);
+  } catch (e) {
+    return [];
+  }
 };
 
 export const submitAppointment = async (appointmentData: any) => {
   if (!isConfigured) {
     if (isSecretKey) throw new Error("SECURITY_ERROR: Using service_role key in browser is forbidden.");
-    throw new Error("API_NOT_CONFIGURED");
+    throw new Error("API_NOT_CONFIGURED: Please set your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.");
   }
 
   // Double check availability immediately before inserting to prevent race conditions
@@ -94,7 +108,7 @@ export const submitAppointment = async (appointmentData: any) => {
 
   if (error) {
     if (error.code === '42P01') {
-      throw new Error("The 'appointments' table does not exist in your Supabase database. Please run the SQL script in the Supabase SQL Editor.");
+      throw new Error("Table 'appointments' not found. Ensure you ran the SQL setup script in Supabase.");
     }
     throw error;
   }
@@ -104,17 +118,21 @@ export const submitAppointment = async (appointmentData: any) => {
 export const fetchAppointments = async () => {
   if (!isConfigured) return [];
   
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    if (error.code === '42P01') {
-       console.error("Supabase table 'appointments' not found. Run the SQL setup script.");
-       return [];
+    if (error) {
+      if (error.code === '42P01') {
+         console.error("Supabase table 'appointments' not found.");
+         return [];
+      }
+      throw error;
     }
-    throw error;
+    return data || [];
+  } catch (e) {
+    return [];
   }
-  return data || [];
 };

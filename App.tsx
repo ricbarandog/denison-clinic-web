@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
@@ -11,7 +10,6 @@ const App: React.FC = () => {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check for hash in URL to enter admin mode (e.g., site.com/#admin)
   useEffect(() => {
     if (window.location.hash === '#admin') {
       setIsAdminMode(true);
@@ -19,8 +17,6 @@ const App: React.FC = () => {
   }, []);
 
   const handleAdminLogin = (key: string) => {
-    // In a real app, this would be a secure check or Supabase Auth
-    // For this implementation, we use a simple staff key
     if (key === 'denison2024') {
       setIsLoggedIn(true);
     } else {
@@ -32,11 +28,15 @@ const App: React.FC = () => {
     return isLoggedIn ? <AdminDashboard /> : <AdminLogin onLogin={handleAdminLogin} />;
   }
 
+  // Explicitly reference components
+  const CalendarIcon = ICONS.Calendar;
+  const PhoneIcon = ICONS.Phone;
+  const CheckIcon = ICONS.Check;
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
       <Navbar onBookClick={() => setIsBookingOpen(true)} />
       
-      {/* Hero Section */}
       <section className="relative h-[85vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
@@ -63,12 +63,12 @@ const App: React.FC = () => {
                 onClick={() => setIsBookingOpen(true)}
                 className="px-10 py-5 bg-white text-[#0056b3] rounded-full font-bold text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl active:scale-95 flex items-center justify-center gap-2"
               >
-                <ICONS.Calendar />
+                <CalendarIcon />
                 Book Free Consultation
               </button>
               <div className="flex items-center gap-3 px-6 py-4 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                 <div className="w-10 h-10 bg-green-400 rounded-full flex items-center justify-center text-blue-900">
-                  <ICONS.Phone />
+                  <PhoneIcon />
                 </div>
                 <div>
                   <div className="text-xs font-bold uppercase tracking-widest text-blue-200">Emergency Line</div>
@@ -80,7 +80,6 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Services Section */}
       <section id="services" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
@@ -109,7 +108,6 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* About Us / Trust Building */}
       <section id="about" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-16">
@@ -135,7 +133,7 @@ const App: React.FC = () => {
                 {['Board Certified Dental Specialist', 'Harvard School of Dental Medicine', 'Advanced Implantology Expert', '15,000+ Successful Procedures'].map(item => (
                   <li key={item} className="flex items-center gap-3 text-gray-800 font-semibold">
                     <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                      <ICONS.Check />
+                      <CheckIcon />
                     </div>
                     {item}
                   </li>
@@ -152,7 +150,6 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer id="contact" className="bg-gray-900 text-gray-400 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-gray-800 pb-16">
@@ -175,7 +172,7 @@ const App: React.FC = () => {
             <div>
               <h4 className="text-white font-bold mb-6">Contact</h4>
               <ul className="space-y-4 text-sm">
-                <li className="flex items-center gap-3"><ICONS.Phone /> 1-800-DENISON</li>
+                <li className="flex items-center gap-3"><PhoneIcon /> 1-800-DENISON</li>
                 <li>support@denisonclinic.com</li>
                 <li>123 Healthcare Ave, Suite 400<br/>San Francisco, CA 94103</li>
               </ul>
