@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { SERVICES, ICONS } from '../constants';
-import { AppointmentRequest } from '../types';
+import { AppointmentRequest, ServiceCategory } from '../types';
 import { submitAppointment, getBookedSlotsForDate } from '../lib/supabase';
 
 interface BookingModalProps {
@@ -25,9 +24,15 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
-  // Fetch booked slots whenever the date changes
   useEffect(() => {
     const fetchSlots = async () => {
       if (formData.date) {
@@ -35,7 +40,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
         try {
           const booked = await getBookedSlotsForDate(formData.date);
           setBookedSlots(booked);
-          // If the currently selected time is now booked, clear it
           if (formData.time && booked.includes(formData.time)) {
             setFormData(prev => ({ ...prev, time: '' }));
           }
@@ -49,8 +53,19 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
     fetchSlots();
   }, [formData.date]);
 
+  if (!isOpen) return null;
+
   const handleNext = () => setStep(s => s + 1);
   const handleBack = () => setStep(s => s - 1);
+
+  const getCategoryColor = (cat: ServiceCategory) => {
+    switch(cat) {
+      case ServiceCategory.COSMETIC: return 'bg-purple-100 text-purple-700';
+      case ServiceCategory.EMERGENCY: return 'bg-red-100 text-red-700';
+      case ServiceCategory.ORTHODONTICS: return 'bg-green-100 text-green-700';
+      default: return 'bg-blue-100 text-blue-700';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,9 +77,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
       setIsSubmitting(false);
       setIsSuccess(true);
     } catch (err: any) {
-      console.error("Submission error:", err);
       setIsSubmitting(false);
-      setError(err.message || "Unable to save appointment. Please check your connection.");
+      setError(err.message || "Submission failed. Please try again.");
     }
   };
 
@@ -72,44 +86,64 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
     switch(step) {
       case 1:
         return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-800">Select Service</h3>
-            <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Select Treatment</h3>
+              <p className="text-sm text-gray-500">Choose the service you require today.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
               {SERVICES.map(s => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => setFormData({...formData, serviceId: s.id})}
-                  className={`p-4 border rounded-xl text-left transition-all ${formData.serviceId === s.id ? 'border-medical-blue bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-300'}`}
+                  className={`p-4 border rounded-2xl text-left transition-all relative overflow-hidden ${formData.serviceId === s.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-gray-100 hover:border-gray-300 bg-gray-50/50'}`}
                 >
-                  <div className="font-semibold">{s.name}</div>
-                  <div className="text-sm text-gray-500">{s.category} • {s.durationMinutes} mins</div>
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-bold text-gray-800">{s.name}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getCategoryColor(s.category)}`}>
+                      {s.category.split(' ')[0]}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 line-clamp-1">{s.description}</div>
+                  <div className="mt-2 text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Approx. {s.durationMinutes} minutes
+                  </div>
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl">
-              <span className="text-sm font-medium text-gray-700">Patient Status:</span>
-              <button 
-                type="button"
-                onClick={() => setFormData({...formData, patientType: 'new'})}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase transition-colors ${formData.patientType === 'new' ? 'bg-medical-blue text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'}`}
-              >New</button>
-              <button 
-                type="button"
-                onClick={() => setFormData({...formData, patientType: 'returning'})}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase transition-colors ${formData.patientType === 'returning' ? 'bg-medical-blue text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'}`}
-              >Returning</button>
+            <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100 flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-700 ml-2">Patient Status</span>
+              <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-200">
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, patientType: 'new'})}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${formData.patientType === 'new' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                >New</button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, patientType: 'returning'})}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${formData.patientType === 'returning' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-700'}`}
+                >Returning</button>
+              </div>
             </div>
-            <button type="button" onClick={handleNext} className="w-full bg-medical-blue text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-[0.98]">Continue to Schedule</button>
+            <button type="button" onClick={handleNext} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg active:scale-[0.99] flex items-center justify-center gap-2">
+              Next Step
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
           </div>
         );
       case 2:
         return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-gray-800">Choose Date & Time</h3>
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Pick Your Time</h3>
+              <p className="text-sm text-gray-500">Available slots for the selected date.</p>
+            </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-600 mb-1">Select Date</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-widest">Appointment Date</label>
                 <div className="relative">
                   <input 
                     type="date" 
@@ -117,117 +151,98 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                     min={new Date().toISOString().split('T')[0]}
                     value={formData.date}
                     onChange={(e) => setFormData({...formData, date: e.target.value})}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium" 
                   />
                   {isLoadingSlots && (
-                    <div className="absolute right-3 top-3.5">
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                      <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-2">
-                {TIME_SLOTS.map(t => {
-                  const isBooked = bookedSlots.includes(t);
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      disabled={isBooked}
-                      onClick={() => setFormData({...formData, time: t})}
-                      className={`p-2 text-sm border rounded-lg transition-all relative ${
-                        formData.time === t 
-                          ? 'bg-medical-blue text-white border-medical-blue shadow-sm' 
-                          : isBooked
-                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through'
-                          : 'bg-white hover:border-blue-400 text-gray-700'
-                      }`}
-                    >
-                      {t}
-                      {isBooked && <span className="absolute -top-1 -right-1 flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>}
-                    </button>
-                  );
-                })}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-widest">Select Slot</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {TIME_SLOTS.map(t => {
+                    const isBooked = bookedSlots.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        disabled={isBooked}
+                        onClick={() => setFormData({...formData, time: t})}
+                        className={`p-3 text-sm border-2 rounded-xl transition-all ${
+                          formData.time === t 
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                            : isBooked
+                            ? 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
+                            : 'bg-white border-gray-100 hover:border-blue-200 text-gray-700'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              {bookedSlots.length > 0 && (
-                <p className="text-[10px] text-gray-400 italic">* Red indicator denotes slots already taken by other patients.</p>
-              )}
             </div>
             <div className="flex gap-3">
-              <button type="button" onClick={handleBack} className="flex-1 border border-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors">Back</button>
+              <button type="button" onClick={handleBack} className="flex-1 border-2 border-gray-100 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-all">Back</button>
               <button 
                 type="button"
                 disabled={!formData.date || !formData.time || isLoadingSlots}
                 onClick={handleNext} 
-                className="flex-[2] bg-medical-blue text-white py-4 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg active:scale-[0.98]"
-              >Patient Details</button>
+                className="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg active:scale-[0.99]"
+              >Continue</button>
             </div>
           </div>
         );
       case 3:
         return (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <h3 className="text-xl font-bold text-gray-800">Patient Information</h3>
+          <form onSubmit={handleSubmit} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Final Details</h3>
+              <p className="text-sm text-gray-500">Provide your contact information for the reminder.</p>
+            </div>
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-bold flex items-center gap-3 animate-bounce">
-                <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
+              <div className="p-4 bg-red-50 text-red-700 rounded-2xl text-xs font-bold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
                 {error}
               </div>
             )}
-            <div className="grid grid-cols-2 gap-4">
-              <input 
-                placeholder="First Name" 
-                required
-                className="p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
-                onChange={e => setFormData({...formData, firstName: e.target.value})}
-              />
-              <input 
-                placeholder="Last Name" 
-                required
-                className="p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
-                onChange={e => setFormData({...formData, lastName: e.target.value})}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">First Name</label>
+                <input placeholder="Jane" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, firstName: e.target.value})} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Last Name</label>
+                <input placeholder="Doe" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, lastName: e.target.value})} />
+              </div>
             </div>
-            <input 
-              type="email" 
-              placeholder="Email Address" 
-              required
-              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
-              onChange={e => setFormData({...formData, email: e.target.value})}
-            />
-            <input 
-              type="tel" 
-              placeholder="Phone Number" 
-              required
-              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
-              onChange={e => setFormData({...formData, phone: e.target.value})}
-            />
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-               <label className="block text-xs font-bold text-blue-600 uppercase mb-2 tracking-wider">Insurance Provider (Optional)</label>
-               <input 
-                 placeholder="e.g. Aetna, Delta Dental"
-                 className="w-full p-2 border border-blue-200 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
-                 onChange={e => setFormData({...formData, insuranceProvider: e.target.value})}
-               />
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Email Address</label>
+              <input type="email" placeholder="jane@example.com" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, email: e.target.value})} />
             </div>
-            <div className="flex gap-3">
-              <button type="button" onClick={handleBack} className="flex-1 border border-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors">Back</button>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Mobile Number</label>
+              <input type="tel" placeholder="(555) 000-0000" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, phone: e.target.value})} />
+            </div>
+            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-2">
+               <label className="block text-[10px] font-bold text-blue-600 uppercase tracking-widest">Insurance Provider (Optional)</label>
+               <input placeholder="e.g. Blue Shield" className="w-full p-3 border border-blue-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-blue-500 outline-none" onChange={e => setFormData({...formData, insuranceProvider: e.target.value})} />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={handleBack} className="flex-1 border-2 border-gray-100 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-50 transition-all">Back</button>
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-[2] bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]"
+                className="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.99]"
               >
                 {isSubmitting ? (
-                  <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                    Confirm Appointment
-                  </>
-                )}
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : "Confirm Booking"}
               </button>
             </div>
           </form>
@@ -237,40 +252,46 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative">
-        <div className="bg-medical-blue h-2 w-full"></div>
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-8">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" onClick={onClose} />
+      <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden relative border border-white/20">
+        <div className="p-8 pb-10">
+          <div className="flex justify-between items-center mb-10">
             <div className="flex items-center gap-2">
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${step >= 1 ? 'bg-medical-blue text-white shadow-sm' : 'bg-gray-200 text-gray-500'}`}>1</span>
-              <div className={`h-1 w-8 rounded-full transition-colors ${step >= 2 ? 'bg-medical-blue' : 'bg-gray-200'}`}></div>
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${step >= 2 ? 'bg-medical-blue text-white shadow-sm' : 'bg-gray-200 text-gray-500'}`}>2</span>
-              <div className={`h-1 w-8 rounded-full transition-colors ${step >= 3 ? 'bg-medical-blue' : 'bg-gray-200'}`}></div>
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${step >= 3 ? 'bg-medical-blue text-white shadow-sm' : 'bg-gray-200 text-gray-500'}`}>3</span>
+              <div className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
+              <div className={`w-8 h-1 rounded-full transition-all duration-500 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
+              <div className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
+              <div className={`w-8 h-1 rounded-full transition-all duration-500 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`} />
+              <div className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`} />
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button onClick={onClose} className="bg-gray-100 text-gray-400 hover:text-gray-600 transition-all p-2 rounded-full hover:rotate-90">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
 
           {isSuccess ? (
-            <div className="text-center py-12 space-y-4 animate-in fade-in zoom-in duration-300">
-              <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <ICONS.Check />
+            <div className="text-center py-8 space-y-6 animate-in zoom-in duration-500">
+              <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Booking Confirmed!</h2>
-              <p className="text-gray-600 px-8">Thank you, {formData.firstName}. Your appointment has been recorded. We will see you on {formData.date} at {formData.time}.</p>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">You're All Set!</h2>
+                <p className="text-gray-500 max-w-xs mx-auto text-sm leading-relaxed">
+                  Confirmation sent to <span className="text-blue-600 font-bold">{formData.email}</span>. We'll see you on {formData.date} at {formData.time}.
+                </p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 text-left space-y-2">
+                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Clinic Location</div>
+                 <div className="text-sm font-bold text-gray-800">123 Healthcare Ave, Suite 400</div>
+                 <div className="text-xs text-gray-500">San Francisco, CA 94103</div>
+              </div>
               <button 
                 onClick={() => {
                   onClose();
                   window.dispatchEvent(new CustomEvent('appointment-added'));
                 }}
-                className="mt-8 bg-medical-blue text-white px-10 py-3 rounded-full font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all hover:scale-105"
+                className="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98]"
               >
-                Return to Website
+                Close & Return Home
               </button>
             </div>
           ) : renderStep()}
