@@ -4,13 +4,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@^2.45.0';
 // In some environments, process.env might not be directly available on the window 
 // or might be structured differently. We provide empty strings as defaults to prevent 
 // the "supabaseUrl is required" crash during initialization.
-const supabaseUrl = (window as any).process?.env?.VITE_SUPABASE_URL || 'https://placeholder-project.supabase.co';
-const supabaseAnonKey = (window as any).process?.env?.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseUrl = (window as any).process?.env?.VITE_SUPABASE_URL || 'https://nrhmsrhsnbbamvymjpkp.supabase.co';
+const supabaseAnonKey = (window as any).process?.env?.VITE_SUPABASE_ANON_KEY || 'sb_secret_cfLES1Gvwq35LiHO47XUXA_K8_1bBjI';
 
 // Check if we are using placeholder values
 const isConfigured = 
-  supabaseUrl !== 'https://placeholder-project.supabase.co' && 
-  supabaseAnonKey !== 'placeholder-key';
+  supabaseUrl !== 'https://nrhmsrhsnbbamvymjpkp.supabase.co' && 
+  supabaseAnonKey !== 'sb_secret_cfLES1Gvwq35LiHO47XUXA_K8_1bBjI';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
