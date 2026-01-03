@@ -1,11 +1,36 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
+import AdminLogin from './components/AdminLogin';
+import AdminDashboard from './components/AdminDashboard';
 import { SERVICES, ICONS } from './constants';
 
 const App: React.FC = () => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check for hash in URL to enter admin mode (e.g., site.com/#admin)
+  useEffect(() => {
+    if (window.location.hash === '#admin') {
+      setIsAdminMode(true);
+    }
+  }, []);
+
+  const handleAdminLogin = (key: string) => {
+    // In a real app, this would be a secure check or Supabase Auth
+    // For this implementation, we use a simple staff key
+    if (key === 'denison2024') {
+      setIsLoggedIn(true);
+    } else {
+      alert("Invalid access key. Please contact IT.");
+    }
+  };
+
+  if (isAdminMode) {
+    return isLoggedIn ? <AdminDashboard /> : <AdminLogin onLogin={handleAdminLogin} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
@@ -143,7 +168,7 @@ const App: React.FC = () => {
               <ul className="space-y-4 text-sm">
                 <li><a href="#services" className="hover:text-blue-400 transition-colors">Services</a></li>
                 <li><a href="#about" className="hover:text-blue-400 transition-colors">About Us</a></li>
-                <li><a href="#booking" className="hover:text-blue-400 transition-colors">Book Now</a></li>
+                <li><button onClick={() => setIsAdminMode(true)} className="hover:text-blue-400 transition-colors text-left">Staff Portal</button></li>
                 <li><a href="#" className="hover:text-blue-400 transition-colors">Privacy Policy</a></li>
               </ul>
             </div>
@@ -167,9 +192,9 @@ const App: React.FC = () => {
           <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-sm">© 2024 Denison Dental Clinic. All data handled under HIPAA-compliant principles.</p>
             <div className="flex gap-4">
-               <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"></div>
-               <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"></div>
-               <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"></div>
+               <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer flex items-center justify-center text-white font-bold text-xs">FB</div>
+               <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer flex items-center justify-center text-white font-bold text-xs">IG</div>
+               <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer flex items-center justify-center text-white font-bold text-xs">LI</div>
             </div>
           </div>
         </div>
