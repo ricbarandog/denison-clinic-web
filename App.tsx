@@ -23,7 +23,7 @@ const App: React.FC = () => {
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
-          <div className="max-w-2xl space-y-8 animate-in slide-in-from-left duration-700">
+          <div className="max-w-2xl space-y-8">
             <div className="inline-block px-4 py-1.5 bg-blue-500/30 backdrop-blur-md rounded-full text-sm font-bold tracking-wider border border-blue-400/30">
               TRUSTED FAMILY DENTAL CARE
             </div>
@@ -167,7 +167,6 @@ const App: React.FC = () => {
           <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-sm">© 2024 Denison Dental Clinic. All data handled under HIPAA-compliant principles.</p>
             <div className="flex gap-4">
-               {/* Social placeholders */}
                <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"></div>
                <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"></div>
                <div className="w-10 h-10 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors cursor-pointer"></div>
@@ -176,7 +175,6 @@ const App: React.FC = () => {
         </div>
       </footer>
 
-      {/* Booking Modal */}
       <BookingModal 
         isOpen={isBookingOpen} 
         onClose={() => setIsBookingOpen(false)} 
