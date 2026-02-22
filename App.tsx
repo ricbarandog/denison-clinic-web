@@ -40,8 +40,8 @@ const App: React.FC = () => {
       <section className="relative h-[90vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
-            alt="Clinic Atmosphere" 
+            src="https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=2000&q=80" 
+            alt="Dr. Tyron Denison at Denison Clinic" 
             className="w-full h-full object-cover scale-105 animate-slow-zoom"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/40 to-transparent"></div>
@@ -57,7 +57,7 @@ const App: React.FC = () => {
               Dental Excellence <br/> Reinvented<span className="text-blue-400">.</span>
             </h1>
             <p className="text-lg text-slate-300 leading-relaxed max-w-lg font-medium">
-              We merge clinical precision with patient-centric hospitality. Experience the highest standard of oral healthcare in San Francisco.
+              We merge clinical precision with patient-centric hospitality. Experience the highest standard of oral healthcare in Philippines.
             </p>
             <div className="flex flex-col sm:flex-row gap-5 pt-4">
               <button 
@@ -122,8 +122,8 @@ const App: React.FC = () => {
             <div className="flex-1 relative">
               <div className="absolute -top-10 -left-10 w-64 h-64 bg-blue-200/40 rounded-full blur-3xl -z-10 animate-pulse"></div>
               <img 
-                src="https://images.unsplash.com/photo-1588776814546-1ffce47267a5?auto=format&fit=crop&w=800&q=80" 
-                alt="Sarah Denison DMD" 
+                src="PP.png" 
+                alt="Dr. Tyron Denison DMD" 
                 className="rounded-[3rem] shadow-3xl relative z-10 w-full object-cover aspect-[4/5]"
               />
               <div className="absolute -bottom-10 -right-10 bg-white p-10 rounded-[2rem] shadow-2xl z-20 border border-gray-100 max-w-[320px] animate-bounce-slow">
@@ -135,7 +135,7 @@ const App: React.FC = () => {
             <div className="flex-1 space-y-10">
               <div className="space-y-4">
                 <div className="text-blue-600 font-black text-xs uppercase tracking-widest">Clinical Leadership</div>
-                <h2 className="text-5xl font-black text-slate-900 tracking-tight">Dr. Sarah Denison, <span className="text-blue-600 italic">DMD</span></h2>
+                <h2 className="text-5xl font-black text-slate-900 tracking-tight">Dr. Tyron Denison, <span className="text-blue-600 italic">DMD</span></h2>
               </div>
               <p className="text-lg text-slate-600 leading-relaxed font-medium">
                 "We believe that a visit to the dentist should be the best part of your day. Our facility is designed to reduce anxiety and provide a spa-like experience alongside elite clinical results."
@@ -197,7 +197,7 @@ const App: React.FC = () => {
             <div>
               <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-8">Location</h4>
               <p className="text-sm font-medium leading-loose">
-                123 Healthcare Ave, Suite 400<br/>San Francisco, CA 94103<br/>
+                123 Dumaguete City, Negros Oriental<br/>Philippines<br/>
                 <span className="text-white font-bold block mt-4 underline decoration-blue-500 underline-offset-4">Get Directions</span>
               </p>
             </div>
