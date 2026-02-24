@@ -14,8 +14,8 @@ const getEnv = (name: string): string => {
   return '';
 };
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
+const supabaseUrl = 'https://nrhmsrhsnbbamvymjpkp.supabase.co'; // Derived from the JWT ref
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaG1zcmhzbmJiYW12eW1qcGtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTM5NTQsImV4cCI6MjA4Mjk4OTk1NH0.bsFUzIoEzMeZX_z9amuFbVEGh3Ta1s3yYcTgT0QlKHs';
 
 const isSecretKey = supabaseAnonKey.length > 100 && (supabaseAnonKey.includes('.service_role') || !supabaseAnonKey.startsWith('eyJ'));
 

@@ -301,8 +301,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
               </div>
               <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 text-left space-y-2">
                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Clinic Location</div>
-                 <div className="text-sm font-bold text-gray-800">123 Healthcare Ave, Suite 400</div>
-                 <div className="text-xs text-gray-500">San Francisco, CA 94103</div>
+                 <div className="text-sm font-bold text-gray-800">123 Canday-ong, Dumaguete City.</div>
+                 <div className="text-xs text-gray-500">Negros Oriental</div>
               </div>
               <button 
                 onClick={() => {
