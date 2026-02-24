@@ -122,7 +122,7 @@ const App: React.FC = () => {
             <div className="flex-1 relative">
               <div className="absolute -top-10 -left-10 w-64 h-64 bg-blue-200/40 rounded-full blur-3xl -z-10 animate-pulse"></div>
               <img 
-                src="/public/PP.png" 
+                src="public/PP.png" 
                 alt="Dr. Tyron Denison DMD" 
                 className="rounded-[3rem] shadow-3xl relative z-10 w-full object-cover aspect-[4/5]"
               />
