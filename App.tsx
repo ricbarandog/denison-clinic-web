@@ -203,7 +203,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <p className="text-xs font-bold uppercase tracking-widest opacity-40">© 2024 Denison Dental Group. San Francisco, California.</p>
+            <p className="text-xs font-bold uppercase tracking-widest opacity-40">© 2026 Denison Dental Group. Dumaguete City, Negros Oriental.</p>
             <div className="flex gap-6">
                <div className="text-[10px] font-black text-white hover:text-blue-400 transition-all cursor-pointer tracking-widest uppercase">Instagram</div>
                <div className="text-[10px] font-black text-white hover:text-blue-400 transition-all cursor-pointer tracking-widest uppercase">LinkedIn</div>
