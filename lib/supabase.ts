@@ -94,7 +94,6 @@ export const submitAppointment = async (appointmentData: any) => {
       {
         first_name: appointmentData.firstName,
         last_name: appointmentData.lastName,
-        email: appointmentData.email,
         phone: appointmentData.phone,
         service_id: appointmentData.serviceId,
         appointment_date: appointmentData.date,

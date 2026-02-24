@@ -3,10 +3,10 @@ import React from 'react';
 import { Service, ServiceCategory } from './types';
 
 export const SERVICES: Service[] = [
-  { id: '1', name: 'Routine Check-up', category: ServiceCategory.GENERAL, description: 'Comprehensive exam and professional cleaning.', durationMinutes: 60 },
-  { id: '2', name: 'Teeth Whitening', category: ServiceCategory.COSMETIC, description: 'Advanced laser whitening for a brighter smile.', durationMinutes: 90 },
-  { id: '3', name: 'Invisalign Consultation', category: ServiceCategory.ORTHODONTICS, description: 'Discrete teeth straightening solutions.', durationMinutes: 45 },
-  { id: '4', name: 'Emergency Filling', category: ServiceCategory.EMERGENCY, description: 'Immediate care for tooth pain or damage.', durationMinutes: 60 },
+  { id: '1', name: 'Routine Check-up', category: ServiceCategory.GENERAL, description: 'Comprehensive exam and professional cleaning.', durationMinutes: 60, price: 1500 },
+  { id: '2', name: 'Teeth Whitening', category: ServiceCategory.COSMETIC, description: 'Advanced laser whitening for a brighter smile.', durationMinutes: 90, price: 5000 },
+  { id: '3', name: 'Invisalign Consultation', category: ServiceCategory.ORTHODONTICS, description: 'Discrete teeth straightening solutions.', durationMinutes: 45, price: 2000 },
+  { id: '4', name: 'Emergency Filling', category: ServiceCategory.EMERGENCY, description: 'Immediate care for tooth pain or damage.', durationMinutes: 60, price: 2500 },
 ];
 
 export const ICONS = {

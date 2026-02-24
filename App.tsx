@@ -122,7 +122,7 @@ const App: React.FC = () => {
             <div className="flex-1 relative">
               <div className="absolute -top-10 -left-10 w-64 h-64 bg-blue-200/40 rounded-full blur-3xl -z-10 animate-pulse"></div>
               <img 
-                src="/PP.png" 
+                src="https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=1200&q=80" 
                 alt="Dr. Tyron Denison DMD" 
                 className="rounded-[3rem] shadow-3xl relative z-10 w-full object-cover aspect-[4/5]"
               />
@@ -203,7 +203,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <p className="text-xs font-bold uppercase tracking-widest opacity-40">© 2026 Denison Dental Group. Dumaguete City, Negros Oriental.</p>
+            <p className="text-xs font-bold uppercase tracking-widest opacity-40">© 2024 Denison Dental Group. San Francisco, California.</p>
             <div className="flex gap-6">
                <div className="text-[10px] font-black text-white hover:text-blue-400 transition-all cursor-pointer tracking-widest uppercase">Instagram</div>
                <div className="text-[10px] font-black text-white hover:text-blue-400 transition-all cursor-pointer tracking-widest uppercase">LinkedIn</div>

@@ -12,6 +12,7 @@ export interface Service {
   category: ServiceCategory;
   description: string;
   durationMinutes: number;
+  price: number;
 }
 
 export interface AppointmentRequest {
@@ -21,7 +22,6 @@ export interface AppointmentRequest {
   time: string;
   firstName: string;
   lastName: string;
-  email: string;
   phone: string;
   insuranceProvider?: string;
 }

@@ -56,3 +56,45 @@ export const sendSMSReminder = async (appointment: any) => {
     throw error;
   }
 };
+
+export const sendSMSConfirmation = async (appointment: any) => {
+  const accountSid = getEnv('VITE_TWILIO_ACCOUNT_SID');
+  const authToken = getEnv('VITE_TWILIO_AUTH_TOKEN');
+  const fromNumber = getEnv('VITE_TWILIO_PHONE_NUMBER');
+
+  if (!accountSid || !authToken || !fromNumber) {
+    console.warn("Twilio credentials missing. SMS simulation mode active.");
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { success: true, simulated: true };
+  }
+
+  const message = `Confirmed! Hi ${appointment.firstName}, your appointment at Denison Clinic is scheduled for ${appointment.date} at ${appointment.time}. We look forward to seeing you!`;
+
+  try {
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          From: fromNumber,
+          To: appointment.phone,
+          Body: message,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.message || 'Failed to send confirmation SMS');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Twilio Error:', error);
+    throw error;
+  }
+};

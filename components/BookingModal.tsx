@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SERVICES, ICONS } from '../constants';
 import { AppointmentRequest, ServiceCategory } from '../types';
 import { submitAppointment, getBookedSlotsForDate } from '../lib/supabase';
+import { sendSMSConfirmation } from '../lib/twilio';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -74,6 +75,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
 
     try {
       await submitAppointment(formData);
+      // Automated SMS Confirmation
+      try {
+        await sendSMSConfirmation(formData);
+      } catch (smsErr) {
+        console.error("SMS Confirmation failed to send:", smsErr);
+        // We don't block the UI for SMS failure, but we log it
+      }
       setIsSubmitting(false);
       setIsSuccess(true);
     } catch (err: any) {
@@ -166,16 +174,32 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                 <div className="grid grid-cols-3 gap-2">
                   {TIME_SLOTS.map(t => {
                     const isBooked = bookedSlots.includes(t);
+                    
+                    // Filter past times for same-day bookings
+                    const isPastTime = (() => {
+                      const today = new Date().toISOString().split('T')[0];
+                      if (formData.date === today) {
+                        const [hours, minutes] = t.split(':').map(Number);
+                        const now = new Date();
+                        const slotTime = new Date();
+                        slotTime.setHours(hours, minutes, 0, 0);
+                        return slotTime < now;
+                      }
+                      return false;
+                    })();
+
+                    const isDisabled = isBooked || isPastTime;
+
                     return (
                       <button
                         key={t}
                         type="button"
-                        disabled={isBooked}
+                        disabled={isDisabled}
                         onClick={() => setFormData({...formData, time: t})}
                         className={`p-3 text-sm border-2 rounded-xl transition-all ${
                           formData.time === t 
                             ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
-                            : isBooked
+                            : isDisabled
                             ? 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed'
                             : 'bg-white border-gray-100 hover:border-blue-200 text-gray-700'
                         }`}
@@ -220,10 +244,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
                 <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Last Name</label>
                 <input placeholder="Doe" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, lastName: e.target.value})} />
               </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Email Address</label>
-              <input type="email" placeholder="jane@example.com" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, email: e.target.value})} />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Mobile Number</label>
@@ -276,7 +296,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
               <div className="space-y-2">
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">You're All Set!</h2>
                 <p className="text-gray-500 max-w-xs mx-auto text-sm leading-relaxed">
-                  Confirmation sent to <span className="text-blue-600 font-bold">{formData.email}</span>. We'll see you on {formData.date} at {formData.time}.
+                  Confirmation sent to your mobile number. We'll see you on {formData.date} at {formData.time}.
                 </p>
               </div>
               <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 text-left space-y-2">
