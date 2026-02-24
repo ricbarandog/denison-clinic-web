@@ -247,7 +247,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose }) => {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Mobile Number</label>
-              <input type="tel" placeholder="(+63) 000-0000000" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, phone: e.target.value})} />
+              <input type="tel" placeholder="(09) 000-000000" required className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" onChange={e => setFormData({...formData, phone: e.target.value})} />
             </div>
             <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-2">
                <label className="block text-[10px] font-bold text-blue-600 uppercase tracking-widest">Insurance Provider (Optional)</label>
