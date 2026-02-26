@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { fetchAppointments } from '../lib/supabase';
 import { sendSMSReminder } from '../lib/twilio';
 import { SERVICES } from '../constants';
+import PatientDetailsModal from './PatientDetailsModal';
 
 const AdminDashboard: React.FC = () => {
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -11,6 +12,8 @@ const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'schedule' | 'patients' | 'dashboard'>('dashboard');
   const [sendingSmsId, setSendingSmsId] = useState<string | null>(null);
   const [smsStatus, setSmsStatus] = useState<Record<string, 'idle' | 'sent' | 'error'>>({});
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const loadData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -199,6 +202,7 @@ const AdminDashboard: React.FC = () => {
                   <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Last Visit</th>
                   <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Visits</th>
                   <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Value</th>
+                  <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -218,6 +222,17 @@ const AdminDashboard: React.FC = () => {
                     </td>
                     <td className="px-8 py-5">
                       <div className="text-sm font-black text-blue-600">₱{p.totalSpent.toLocaleString()}</div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <button 
+                        onClick={() => {
+                          setSelectedPatient(p);
+                          setIsDetailsModalOpen(true);
+                        }}
+                        className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
+                      >
+                        More Details
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -367,6 +382,13 @@ const AdminDashboard: React.FC = () => {
           {renderContent()}
         </main>
       </div>
+
+      <PatientDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        patient={selectedPatient}
+        appointments={appointments}
+      />
     </div>
   );
 };
